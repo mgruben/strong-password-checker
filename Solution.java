@@ -24,9 +24,14 @@ public class Solution {
     public int strongPasswordChecker(String s) {
         if (s == null || s.equals("")) return 6;
         
+        // Our "additions" variables
         boolean needsNumber = true;
         boolean needsUpper = true;
         boolean needsLower = true;
+        int numAdditions = 0;
+        
+        // Our "deletions" variables
+        int numDeletions = (s.length() > 20) ? s.length() - 20: 0;
                 
         // The number of characters in sequence
         int c = 1;
@@ -70,27 +75,58 @@ public class Solution {
             if (s.charAt(i) >= '0' && s.charAt(i) <= '9') needsNumber = false;
         }
         
-        // For sequences that end the string, add the sequence.
+        // For sequences that end the string, add the sequence to our array.
         if (c > 2) seq[c]++;
         
         // Tally the number of additions (not necessarily insertions!) needed
-        int numAdditions = 0;
         if (needsLower) numAdditions++;
         if (needsUpper) numAdditions++;
         if (needsNumber) numAdditions++;
         
         // Do our clever sequence shortening
-        int numDeletions = (s.length() > 20) ? s.length() - 20: 0;
         int ndtemp = numDeletions;
         
+        /**
+         * Beginning at the last index of seq which is a multiple of three,
+         * count backwards through seq by threes to decrement sequences.
+         * 
+         * We want to start with multiples of three since we can avoid adding
+         * a "break" by just deleting a single character.
+         * 
+         * Then, we check the last index of seq which is one more than a
+         * multiple of three, since we can avoid adding a "break" by just
+         * deleting two characters.
+         * 
+         * Finally, we check the last index of seq which is two more than a
+         * multiple of three, since we can avoid adding a "break" by just
+         * deleting three characters.  This is the most costly way to spend
+         * our deletions.
+         */
         int lastThreeMult = 3 * ((seq.length - 1) / 3);
         for (int i = lastThreeMult; i < lastThreeMult + 3; i++) {
+            // Handle falling off the end of seq
             int j = (i >= seq.length) ? i - 3: i;
+            
+            // Iterate downward by threes through seq
             while (j > 2 && ndtemp > 0) {
+                
+                // If there is a sequence of length j
                 if (seq[j] > 0) {
+                    
+                    // Decrement the number of sequences of length j by 1
                     seq[j]--;
+                    
+                    /**
+                     * Determine whether we have enough deletions to spend
+                     * to reduce the number of needed breaks by 1, otherwise
+                     * just spend all of our remaining deletions.
+                     */
                     int d = Math.min((i % 3) + 1, ndtemp);
+                    
+                    // Increment the number of sequences of length j-d by 1
                     seq[j-d]++;
+                    
+                    // Update our spent deletions
                     ndtemp -= d;
                 }
                 else j -= 3;
@@ -100,19 +136,52 @@ public class Solution {
         // Calculate the number of breaks
         int numBreaks = 0;
         for (int i = 3; i < seq.length; i++) {
+            /**
+             * We need a single break for a sequence of three and for a 
+             * sequence of five, but two breaks for a sequence of six.
+             * 
+             * Accordingly, we need 1 break for every (sequenceLength) / 3.
+             * 
+             * Handle multiple sequences of the same length by multiplying by
+             * the number of sequences of that length
+             */
             numBreaks += seq[i] * (i / 3);
         }
         
-        // Consolidate breaks and additions, if possible
+        /**
+         * Consolidate breaks and additions, if possible.
+         * 
+         * Note that we can't have fewer breaks than are required, or fewer
+         * additions than are required, but that every break can serve as an
+         * addition, and vice versa.
+         * 
+         * Accordingly, the number of changes we need is the max of the two.
+         */
         int numChanges = Math.max(numBreaks, numAdditions);
         
-        // Calculate number of changes for short input
+        /**
+         * Calculate number of changes for short input.
+         * 
+         * Note that we can't have fewer insertions than are required, or fewer
+         * changes (see above) than are required, but that every insertion can
+         * serve as a change, and vice versa.
+         * 
+         * Accordingly, the number of changes we need is the max of the two.
+         */
         if (s.length() < 6) {
             int numInsertions = 6 - s.length();
             numChanges = Math.max(numInsertions, numChanges);
         }
         
-        // Calculate number of changes for long input
+        /**
+         * Calculate number of changes for long input.
+         * 
+         * Note that we already reduced numChanges above by the amount of
+         * deletions we could cleverly spend.
+         * 
+         * Accordingly, we need to now add those deletions back in, since they
+         * are required for length.
+         */
         else if (s.length() > 20) {
             numChanges = numDeletions + numChanges;
         }
