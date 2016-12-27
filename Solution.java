@@ -73,7 +73,7 @@ public class Solution {
         numDeletions = 0;
         seq = new int[s.length() + 1];
         
-        // Count "additions" and sequence breaks needed
+        // Count "additions" and frequency of sequences encountered
         readString();
                 
         // Spend deletions to minimize sequence breaks needed, if possible
