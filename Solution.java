@@ -79,34 +79,37 @@ public class Solution {
         if (needsUpper) numAdditions++;
         if (needsNumber) numAdditions++;
         
+        // Do our clever sequence shortening
         int numDeletions = (s.length() > 20) ? s.length() - 20: 0;
-        
+        int ndtemp = numDeletions;
         int i = 3;
-        while (i < seq.length && numDeletions > 0) {
+        while (i < seq.length && ndtemp > 0) {
             if (seq[i] > 0) {
                 seq[i]--;
-                int d = Math.min(i - 2, numDeletions);
+                int d = Math.min((i % 3) + 1, ndtemp);
                 seq[i-d]++;
-                numDeletions -= d;
+                ndtemp -= d;
             }
             else i++;
         }
         
-        numDeletions = (s.length() > 20) ? s.length() - 20: 0;
-        
+        // Calculate the number of breaks
         int numBreaks = 0;
-        
         for (i = 3; i < seq.length; i++) {
-            numBreaks += seq[i] * i / 3;
+            numBreaks += seq[i] * (i / 3);
         }
         
+        // Consolidate breaks and additions, if possible
         int numChanges = Math.max(numBreaks, numAdditions);
         
+        // Calculate number of changes for short input
         if (s.length() < 6) {
             int numInsertions = 6 - s.length();
             numChanges = Math.max(numInsertions, numChanges);
         }
-        if (s.length() > 20) {
+        
+        // Calculate number of changes for long input
+        else if (s.length() > 20) {
             numChanges = numDeletions + numChanges;
         }
         return numChanges;
@@ -159,6 +162,9 @@ public class Solution {
         
         System.out.println(sol.strongPasswordChecker("aaa111"));
         // 2
+        
+        System.out.println(sol.strongPasswordChecker("AAAAAABBBBBB123456789a"));
+        // 4
     }
     
 }
