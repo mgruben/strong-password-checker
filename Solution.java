@@ -163,6 +163,9 @@ public class Solution {
         
         System.out.println(sol.strongPasswordChecker("1010101010aaaB10101010"));
         // 2
+        
+        System.out.println(sol.strongPasswordChecker("aaaabbaaabbaaa123456A"));
+        // 3
     }
     
 }
