@@ -21,11 +21,13 @@
  */
 public class Solution {
     public int strongPasswordChecker(String s) {
-        if (s == null) return 6;
+        if (s == null || s.equals("")) return 6;
         
         boolean needsNumber = true;
         boolean needsUpper = true;
         boolean needsLower = true;
+        
+        int numDeletions = (s.length() > 20) ? s.length() - 20: 0;
         
         // The number of characters in sequence
         int c = 1;
@@ -45,12 +47,27 @@ public class Solution {
                 // Increase the current sequence length
                 if (s.charAt(i) == tmp) c++;
                 
+                
                 /**
                  * The sequence has ended.
                  * Count the number of breaks needed and
                  * reset the sequence count.
                  */
                 else {
+                    if (numDeletions > 0 && c > 2) {
+                        if (numDeletions > (c - 2)) {
+                            numDeletions -= (c - 2);
+                            c = 2;
+                        }
+                        else if (numDeletions < (c - 2)) {
+                            c -= numDeletions;
+                            numDeletions = 0;
+                        }
+                        else {
+                            c = 2;
+                            numDeletions = 0;
+                        }
+                    }
                     numBreaks += c / 3;
                     c = 1;
                 }
@@ -69,6 +86,20 @@ public class Solution {
         }
         
         // For sequences that end the string, count the number of breaks needed.
+        if (numDeletions > 0 && c > 3) {
+            if (numDeletions > (c - 2)) {
+                numDeletions -= (c - 2);
+                c = 2;
+            }
+            else if (numDeletions < (c - 2)) {
+                c -= numDeletions;
+                numDeletions = 0;
+            }
+            else {
+                c = 2;
+                numDeletions = 0;
+            }
+        }
         numBreaks += c / 3;
         
         // Tally the number of additions (not necessarily insertions!) needed
@@ -77,15 +108,17 @@ public class Solution {
         if (needsUpper) numAdditions++;
         if (needsNumber) numAdditions++;
         
-        System.out.println("Needs " + numAdditions + " additions");
-        System.out.println("Needs Lower: " + needsLower);
-        System.out.println("Needs Upper: " + needsUpper);
-        System.out.println("Needs Number: " + needsNumber);
-        System.out.println("Needs " + numBreaks + " breaks of repeated character");
+        numDeletions = (s.length() > 20) ? s.length() - 20: 0;
         
-        int numInsertions = (s.length() < 6) ? 6 - s.length(): 0;
+        int numChanges = Math.max(numBreaks, numAdditions);
         
-        int numChanges = Math.max(numInsertions, Math.max(numBreaks, numAdditions));
+        if (s.length() < 6) {
+            int numInsertions = 6 - s.length();
+            numChanges = Math.max(numInsertions, numChanges);
+        }
+        if (s.length() > 20) {
+            numChanges = numDeletions + numChanges;
+        }
         return numChanges;
     }
     
@@ -94,17 +127,21 @@ public class Solution {
      */
     public static void main(String[] args) {
         Solution sol = new Solution();
+        
+        System.out.println(sol.strongPasswordChecker(""));
+        // 6 insertions
+        
         System.out.println(sol.strongPasswordChecker("0123456789"));
-        // needsLower = true; needsUpper = true;
+        // 2 changes or additions; needsLower = true; needsUpper = true;
         
         System.out.println(sol.strongPasswordChecker("abcdefghijklmnopqrstuvwxyz"));
-        // needsUpper = true; needsNumber = true;
+        // 8; 6 deletions and 2 changes; needsUpper = true; needsNumber = true;
         
         System.out.println(sol.strongPasswordChecker("ABCDEFGHIJKLMNOPQRSTUVWXYZ"));
-        // needsNumber = true; needsLower = true;
+        // 8; 6 deletions and 2 changes; needsNumber = true; needsLower = true;
         
         System.out.println(sol.strongPasswordChecker("aaaaA"));
-        // 2 e.g. add a number at 2, change 4 to capital
+        // 1 e.g. add a number at 2
         
         System.out.println(sol.strongPasswordChecker("aaaaa"));
         // 2 e.g. add a number at 2, change 4 to capital
@@ -117,6 +154,15 @@ public class Solution {
         
         System.out.println(sol.strongPasswordChecker("Aa1Aa1Aa1Aa1Aa1Aa1zzAa1Aa1Aa1Aa1Aa1Aa1zzAa1Aa1Aa1Aa1Aa1Aa1zz"));
         // 40 (e.g. 40 deletions)
+        
+        System.out.println(sol.strongPasswordChecker("ABABABABABABABABABAB1"));
+        // 2
+        
+        System.out.println(sol.strongPasswordChecker("aaaaaaaaaaaaaaaaaaaaa"));
+        // 7
+        
+        System.out.println(sol.strongPasswordChecker("1010101010aaaB10101010"));
+        // 2
     }
     
 }
