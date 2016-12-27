@@ -23,17 +23,15 @@
 public class Solution {
     // The given String
     String s;
-    
-    // The "addition" variables
-    boolean needsNumber;
-    boolean needsUpper;
-    boolean needsLower;
-    
-    // The sequences we encounter
-    int[] seq;
+        
+    // The number of additions which are required
+    int numAdditions;
     
     // The number of deletions which are required
     int numDeletions;
+    
+    // The sequences we encounter
+    int[] seq;
     
     /**
      * Given a String s, the candidate password, returns the minimum number
@@ -71,20 +69,13 @@ public class Solution {
         this.s = s;
         
         // Initialize instance variables
-        needsNumber = true;
-        needsUpper = true;
-        needsLower = true;
-        int numAdditions = 0;
+        numAdditions = 0;
         numDeletions = 0;
         seq = new int[s.length() + 1];
         
-        // Count "additions" needed and sequences
+        // Count "additions" and sequence breaks needed
         readString();
-        
-        if (needsLower) numAdditions++;
-        if (needsUpper) numAdditions++;
-        if (needsNumber) numAdditions++;
-        
+                
         // Spend deletions to minimize sequence breaks needed, if possible
         if (s.length() > 20) spendDeletions();
         
@@ -118,6 +109,9 @@ public class Solution {
      * characters, if 3 or longer.
      */
     private void readString() {
+        boolean needsNumber = true;
+        boolean needsUpper = true;
+        boolean needsLower = true;
         
         // The current sequence length
         int c = 1;
@@ -141,6 +135,10 @@ public class Solution {
         
         // Handle long sequences which continue to the end the given String
         if (c > 2) seq[c]++;
+        
+        if (needsLower) numAdditions++;
+        if (needsUpper) numAdditions++;
+        if (needsNumber) numAdditions++;
     }
     
     /**
