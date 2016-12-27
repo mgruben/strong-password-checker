@@ -128,10 +128,10 @@ public class Solution {
                 tmp = s.charAt(i);
             }
             
-            // Determine whether conditions have been met
+            // Determine whether "addition" conditions have been met
             if (s.charAt(i) >= 'a' && s.charAt(i) <= 'z') needsLower = false;
-            if (s.charAt(i) >= 'A' && s.charAt(i) <= 'Z') needsUpper = false;
-            if (s.charAt(i) >= '0' && s.charAt(i) <= '9') needsNumber = false;
+            else if (s.charAt(i) >= 'A' && s.charAt(i) <= 'Z') needsUpper = false;
+            else if (s.charAt(i) >= '0' && s.charAt(i) <= '9') needsNumber = false;
         }
         
         // For sequences that end the string, add the sequence to our array.
