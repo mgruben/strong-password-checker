@@ -21,22 +21,82 @@
  * @author Michael <GrubenM@GMail.com>
  */
 public class Solution {
+    
+    /**
+     * Given a String s, the candidate password, returns the minimum number
+     * of single-action changes required for that password to be "strong".
+     * 
+     * In order to be "strong," a password must:
+     * (1) be between 6 and 20 characters in length, inclusive,
+     * (2) contain at least one lowercase letter,
+     * (3) contain at least one uppercase letter.
+     * (4) contain at least one number.
+     * (5) not contain a sequence of 3 or more repeated characters
+     * 
+     * The possible single-action changes are:
+     * (a) Delete a character,
+     * (b) Insert a character,
+     * (c) Replace a character with another character.
+     * 
+     * Ex. "abc12" -> 1 since the password is missing one character, and that
+     *      character can be an uppercase letter.
+     * 
+     * Ex. "aaabbb" -> 2 since we can change the middle 'a' and 'b' to 'H' and '1'.
+     * 
+     * Ex. "Aa1Aa1Aa1Aa1Aa1Aa1zzAa1Aa1Aa1Aa1Aa1Aa1zzAa1Aa1Aa1Aa1Aa1Aa1zz" ->
+     *      40, since the password meets the strong criteria except that it is
+     *      60 characters long, so we must delete 40 characters.
+     * 
+     * Ex. "$$$$$$" -> 3, since it's missing lowercase, uppercase, and a number,
+     *      and we can distribute those replacements to break the sequence of 6.
+     * 
+     * @param s the given string
+     * @return the minimum number of changes to have a strong password
+     */
     public int strongPasswordChecker(String s) {
+        
+        // Check for empty input
         if (s == null || s.equals("")) return 6;
         
-        // Our "additions" variables
+        /**
+         * Our "additions" variables.
+         * 
+         * We will set these to "false" as we discover characters which are
+         * lowercase, uppercase, or numbers.
+         * 
+         * As used in this solution, "additions" refers to how many of the
+         * three alphanumeric requirements still need to be satisfied.
+         * 
+         * This is a separate concept from "insertions", which is how many
+         * characters need to be added to reach the minimum password length.
+         */
         boolean needsNumber = true;
         boolean needsUpper = true;
         boolean needsLower = true;
         int numAdditions = 0;
         
-        // Our "deletions" variables
+        /**
+         * The number of deletions which are required.
+         * 
+         * A "deletion" is the removal of a character from the password.
+         */
         int numDeletions = (s.length() > 20) ? s.length() - 20: 0;
                 
-        // The number of characters in sequence
+        // Initialize the number of characters in sequence
         int c = 1;
         
-        // The sequences we encounter
+        /**
+         * The sequences we encounter.
+         * 
+         * We will use this to spend our deletions (if any) in the most
+         * efficient way possible.
+         * 
+         * E.g. If you have three deletions and three sequences of length three,
+         * spend one deletion per sequence to avoid having to take another
+         * change-action to break the sequences.
+         * 
+         * The indices in this array refer to the length of the sequence.
+         */
         int[] seq = new int[s.length() + 1];
                 
         // Initialize our comparison character
@@ -50,7 +110,6 @@ public class Solution {
                 
                 // Increase the current sequence length
                 if (s.charAt(i) == tmp) c++;
-                
                 
                 /**
                  * The sequence has ended.
