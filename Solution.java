@@ -1,3 +1,12 @@
+
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Deque;
+import java.util.PriorityQueue;
+import java.util.Queue;
+
 /*
  * Copyright (C) 2016 Michael <GrubenM@GMail.com>
  *
@@ -26,15 +35,13 @@ public class Solution {
         boolean needsNumber = true;
         boolean needsUpper = true;
         boolean needsLower = true;
-        
-        int numDeletions = (s.length() > 20) ? s.length() - 20: 0;
-        
+                
         // The number of characters in sequence
         int c = 1;
         
-        // The number of breaks needed in sequences of 3 or more
-        int numBreaks = 0;
-        
+        // The sequences we encounter
+        int[] seq = new int[s.length() + 1];
+                
         // Initialize our comparison character
         char tmp = s.charAt(0);
         
@@ -54,21 +61,7 @@ public class Solution {
                  * reset the sequence count.
                  */
                 else {
-                    if (numDeletions > 0 && c > 2) {
-                        if (numDeletions > (c - 2)) {
-                            numDeletions -= (c - 2);
-                            c = 2;
-                        }
-                        else if (numDeletions < (c - 2)) {
-                            c -= numDeletions;
-                            numDeletions = 0;
-                        }
-                        else {
-                            c = 2;
-                            numDeletions = 0;
-                        }
-                    }
-                    numBreaks += c / 3;
+                    if (c > 2) seq[c]++;
                     c = 1;
                 }
                 
@@ -85,22 +78,8 @@ public class Solution {
             if (s.charAt(i) >= '0' && s.charAt(i) <= '9') needsNumber = false;
         }
         
-        // For sequences that end the string, count the number of breaks needed.
-        if (numDeletions > 0 && c > 3) {
-            if (numDeletions > (c - 2)) {
-                numDeletions -= (c - 2);
-                c = 2;
-            }
-            else if (numDeletions < (c - 2)) {
-                c -= numDeletions;
-                numDeletions = 0;
-            }
-            else {
-                c = 2;
-                numDeletions = 0;
-            }
-        }
-        numBreaks += c / 3;
+        // For sequences that end the string, add the sequence.
+        if (c > 2) seq[c]++;
         
         // Tally the number of additions (not necessarily insertions!) needed
         int numAdditions = 0;
@@ -108,7 +87,26 @@ public class Solution {
         if (needsUpper) numAdditions++;
         if (needsNumber) numAdditions++;
         
+        int numDeletions = (s.length() > 20) ? s.length() - 20: 0;
+        
+        int i = 3;
+        while (i < seq.length && numDeletions > 0) {
+            if (seq[i] > 0) {
+                seq[i]--;
+                int d = Math.min(i - 2, numDeletions);
+                seq[i-d]++;
+                numDeletions -= d;
+            }
+            else i++;
+        }
+        
         numDeletions = (s.length() > 20) ? s.length() - 20: 0;
+        
+        int numBreaks = 0;
+        
+        for (i = 3; i < seq.length; i++) {
+            numBreaks += seq[i] * i / 3;
+        }
         
         int numChanges = Math.max(numBreaks, numAdditions);
         
@@ -166,6 +164,9 @@ public class Solution {
         
         System.out.println(sol.strongPasswordChecker("aaaabbaaabbaaa123456A"));
         // 3
+        
+        System.out.println(sol.strongPasswordChecker("aaa111"));
+        // 2
     }
     
 }
