@@ -1,3 +1,4 @@
+
 /*
  * Copyright (C) 2016 Michael <GrubenM@GMail.com>
  *
@@ -26,15 +27,13 @@ public class Solution {
         boolean needsNumber = true;
         boolean needsUpper = true;
         boolean needsLower = true;
-        
-        int numDeletions = (s.length() > 20) ? s.length() - 20: 0;
-        
+                
         // The number of characters in sequence
         int c = 1;
         
-        // The number of breaks needed in sequences of 3 or more
-        int numBreaks = 0;
-        
+        // The sequences we encounter
+        int[] seq = new int[s.length() + 1];
+                
         // Initialize our comparison character
         char tmp = s.charAt(0);
         
@@ -54,21 +53,7 @@ public class Solution {
                  * reset the sequence count.
                  */
                 else {
-                    if (numDeletions > 0 && c > 2) {
-                        if (numDeletions > (c - 2)) {
-                            numDeletions -= (c - 2);
-                            c = 2;
-                        }
-                        else if (numDeletions < (c - 2)) {
-                            c -= numDeletions;
-                            numDeletions = 0;
-                        }
-                        else {
-                            c = 2;
-                            numDeletions = 0;
-                        }
-                    }
-                    numBreaks += c / 3;
+                    if (c > 2) seq[c]++;
                     c = 1;
                 }
                 
@@ -85,22 +70,8 @@ public class Solution {
             if (s.charAt(i) >= '0' && s.charAt(i) <= '9') needsNumber = false;
         }
         
-        // For sequences that end the string, count the number of breaks needed.
-        if (numDeletions > 0 && c > 3) {
-            if (numDeletions > (c - 2)) {
-                numDeletions -= (c - 2);
-                c = 2;
-            }
-            else if (numDeletions < (c - 2)) {
-                c -= numDeletions;
-                numDeletions = 0;
-            }
-            else {
-                c = 2;
-                numDeletions = 0;
-            }
-        }
-        numBreaks += c / 3;
+        // For sequences that end the string, add the sequence.
+        if (c > 2) seq[c]++;
         
         // Tally the number of additions (not necessarily insertions!) needed
         int numAdditions = 0;
@@ -108,15 +79,41 @@ public class Solution {
         if (needsUpper) numAdditions++;
         if (needsNumber) numAdditions++;
         
-        numDeletions = (s.length() > 20) ? s.length() - 20: 0;
+        // Do our clever sequence shortening
+        int numDeletions = (s.length() > 20) ? s.length() - 20: 0;
+        int ndtemp = numDeletions;
         
+        int lastThreeMult = 3 * ((seq.length - 1) / 3);
+        for (int i = lastThreeMult; i < lastThreeMult + 3; i++) {
+            int j = (i >= seq.length) ? i - 3: i;
+            while (j > 2 && ndtemp > 0) {
+                if (seq[j] > 0) {
+                    seq[j]--;
+                    int d = Math.min((i % 3) + 1, ndtemp);
+                    seq[j-d]++;
+                    ndtemp -= d;
+                }
+                else j -= 3;
+            }
+        }
+        
+        // Calculate the number of breaks
+        int numBreaks = 0;
+        for (int i = 3; i < seq.length; i++) {
+            numBreaks += seq[i] * (i / 3);
+        }
+        
+        // Consolidate breaks and additions, if possible
         int numChanges = Math.max(numBreaks, numAdditions);
         
+        // Calculate number of changes for short input
         if (s.length() < 6) {
             int numInsertions = 6 - s.length();
             numChanges = Math.max(numInsertions, numChanges);
         }
-        if (s.length() > 20) {
+        
+        // Calculate number of changes for long input
+        else if (s.length() > 20) {
             numChanges = numDeletions + numChanges;
         }
         return numChanges;
@@ -166,6 +163,18 @@ public class Solution {
         
         System.out.println(sol.strongPasswordChecker("aaaabbaaabbaaa123456A"));
         // 3
+        
+        System.out.println(sol.strongPasswordChecker("aaa111"));
+        // 2
+        
+        System.out.println(sol.strongPasswordChecker("AAAAAABBBBBB123456789a"));
+        // 4
+        
+        System.out.println(sol.strongPasswordChecker("aaaaabbbbbccccccddddddA1"));
+        // 6
+        
+        System.out.println(sol.strongPasswordChecker("aaaaaa1234567890123Ubefg"));
+        // 4
     }
     
 }
