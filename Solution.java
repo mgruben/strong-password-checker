@@ -36,6 +36,83 @@ public class Solution {
     int numDeletions;
     
     /**
+     * Given a String s, the candidate password, returns the minimum number
+     * of single-action changes required for that password to be "strong".
+     * 
+     * In order to be "strong," a password must:
+     * (1) be between 6 and 20 characters in length, inclusive,
+     * (2) contain at least one lowercase letter,
+     * (3) contain at least one uppercase letter.
+     * (4) contain at least one number.
+     * (5) not contain a sequence of 3 or more repeated characters
+     * 
+     * The possible single-action changes are:
+     * (a) Delete a character,
+     * (b) Insert a character,
+     * (c) Replace a character with another character.
+     * 
+     * Ex. "abc12" -> 1 since the password is missing one character, and that
+     *      character can be an uppercase letter.
+     * 
+     * Ex. "aaabbb" -> 2 since we can change the middle 'a' and 'b' to 'H' and '1'.
+     * 
+     * Ex. "Aa1Aa1Aa1Aa1Aa1Aa1zzAa1Aa1Aa1Aa1Aa1Aa1zzAa1Aa1Aa1Aa1Aa1Aa1zz" ->
+     *      40, since the password meets the strong criteria except that it is
+     *      60 characters long, so we must delete 40 characters.
+     * 
+     * Ex. "$$$$$$" -> 3, since it's missing lowercase, uppercase, and a number,
+     *      and we can distribute those replacements to break the sequence of 6.
+     * 
+     * @param s the given string
+     * @return the minimum number of changes to have a strong password
+     */
+    public int strongPasswordChecker(String s) {
+        if (s == null || s.equals("")) return 6;
+        this.s = s;
+        
+        // Initialize instance variables
+        needsNumber = true;
+        needsUpper = true;
+        needsLower = true;
+        int numAdditions = 0;
+        numDeletions = 0;
+        seq = new int[s.length() + 1];
+        
+        // Count "additions" needed and sequences
+        readString();
+        
+        if (needsLower) numAdditions++;
+        if (needsUpper) numAdditions++;
+        if (needsNumber) numAdditions++;
+        
+        // Spend deletions to minimize sequence breaks needed, if possible
+        if (s.length() > 20) spendDeletions();
+        
+        // Tally number of sequence breaks needed
+        int numBreaks = 0;
+        for (int i = 3; i < seq.length; i++) {
+            numBreaks += seq[i] * (i / 3);
+        }
+        
+        // Consolidate breaks and additions into changes
+        int numChanges = Math.max(numBreaks, numAdditions);
+        
+        // For too-short input, consolidate insertions and changes.
+        if (s.length() < 6) {
+            int numInsertions = 6 - s.length();
+            numChanges = Math.max(numInsertions, numChanges);
+        }
+        
+        // For too-long input, add the number of breaks and additions needed
+        // to the number of deletions required.
+        else if (s.length() > 20) {
+            numChanges = numDeletions + numChanges;
+        }
+        
+        return numChanges;
+    }
+    
+    /**
      * Processes the given string, storing whether the String meets the
      * alphanumeric requirements, and storing the sequences of repeated
      * characters, if 3 or longer.
@@ -125,83 +202,6 @@ public class Solution {
                 else j -= 3;
             }
         }
-    }
-    
-    /**
-     * Given a String s, the candidate password, returns the minimum number
-     * of single-action changes required for that password to be "strong".
-     * 
-     * In order to be "strong," a password must:
-     * (1) be between 6 and 20 characters in length, inclusive,
-     * (2) contain at least one lowercase letter,
-     * (3) contain at least one uppercase letter.
-     * (4) contain at least one number.
-     * (5) not contain a sequence of 3 or more repeated characters
-     * 
-     * The possible single-action changes are:
-     * (a) Delete a character,
-     * (b) Insert a character,
-     * (c) Replace a character with another character.
-     * 
-     * Ex. "abc12" -> 1 since the password is missing one character, and that
-     *      character can be an uppercase letter.
-     * 
-     * Ex. "aaabbb" -> 2 since we can change the middle 'a' and 'b' to 'H' and '1'.
-     * 
-     * Ex. "Aa1Aa1Aa1Aa1Aa1Aa1zzAa1Aa1Aa1Aa1Aa1Aa1zzAa1Aa1Aa1Aa1Aa1Aa1zz" ->
-     *      40, since the password meets the strong criteria except that it is
-     *      60 characters long, so we must delete 40 characters.
-     * 
-     * Ex. "$$$$$$" -> 3, since it's missing lowercase, uppercase, and a number,
-     *      and we can distribute those replacements to break the sequence of 6.
-     * 
-     * @param s the given string
-     * @return the minimum number of changes to have a strong password
-     */
-    public int strongPasswordChecker(String s) {
-        if (s == null || s.equals("")) return 6;
-        this.s = s;
-        
-        // Initialize instance variables
-        needsNumber = true;
-        needsUpper = true;
-        needsLower = true;
-        int numAdditions = 0;
-        numDeletions = 0;
-        seq = new int[s.length() + 1];
-        
-        // Count "additions" needed and sequences
-        readString();
-        
-        if (needsLower) numAdditions++;
-        if (needsUpper) numAdditions++;
-        if (needsNumber) numAdditions++;
-        
-        // Spend deletions to minimize sequence breaks needed, if possible
-        if (s.length() > 20) spendDeletions();
-        
-        // Tally number of sequence breaks needed
-        int numBreaks = 0;
-        for (int i = 3; i < seq.length; i++) {
-            numBreaks += seq[i] * (i / 3);
-        }
-        
-        // Consolidate breaks and additions into changes
-        int numChanges = Math.max(numBreaks, numAdditions);
-        
-        // For too-short input, consolidate insertions and changes.
-        if (s.length() < 6) {
-            int numInsertions = 6 - s.length();
-            numChanges = Math.max(numInsertions, numChanges);
-        }
-        
-        // For too-long input, add the number of breaks and additions needed
-        // to the number of deletions required.
-        else if (s.length() > 20) {
-            numChanges = numDeletions + numChanges;
-        }
-        
-        return numChanges;
     }
     
     /**
