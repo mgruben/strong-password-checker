@@ -86,30 +86,22 @@ public class Solution {
         int lastThreeMult = 3 * ((seq.length - 1) / 3);
         for (int i = lastThreeMult; i < lastThreeMult + 3; i++) {
             int j = (i >= seq.length) ? i - 3: i;
-            System.out.println("Starting at j-index: " + j);
             while (j > 2 && ndtemp > 0) {
                 if (seq[j] > 0) {
                     seq[j]--;
                     int d = Math.min((i % 3) + 1, ndtemp);
                     seq[j-d]++;
-                    System.out.println("d is: " + d);
                     ndtemp -= d;
-                    System.out.println("Subtracted " + d + " from " + j);
                 }
-                else {
-                    j -= 3;
-                    System.out.println("j is now: " + j);
-                }
+                else j -= 3;
             }
         }
         
         // Calculate the number of breaks
         int numBreaks = 0;
         for (int i = 3; i < seq.length; i++) {
-            System.out.println("seq[" + i + "] = " + seq[i]);
             numBreaks += seq[i] * (i / 3);
         }
-        System.out.println("numBreaks: " + numBreaks);
         
         // Consolidate breaks and additions, if possible
         int numChanges = Math.max(numBreaks, numAdditions);
