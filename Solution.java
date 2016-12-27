@@ -134,7 +134,10 @@ public class Solution {
             else if (s.charAt(i) >= '0' && s.charAt(i) <= '9') needsNumber = false;
         }
         
-        // For sequences that end the string, add the sequence to our array.
+        /**
+         * For sequences that end the string, add the sequence to our array,
+         * if the sequence is long enough.
+         */
         if (c > 2) seq[c]++;
         
         // Tally the number of additions (not necessarily insertions!) needed
@@ -142,7 +145,7 @@ public class Solution {
         if (needsUpper) numAdditions++;
         if (needsNumber) numAdditions++;
         
-        // Do our clever sequence shortening
+        // Initialize cost-tracker for clever deletion-spending
         int ndtemp = numDeletions;
         
         /**
@@ -150,13 +153,14 @@ public class Solution {
          * count backwards through seq by threes to decrement sequences.
          * 
          * We want to start with multiples of three since we can avoid adding
-         * a "break" by just deleting a single character.
+         * a "break" by just deleting a single character.  In other words,
+         * this is the best use of our deletions.
          * 
-         * Then, we check the last index of seq which is one more than a
+         * Then, we start with the last index of seq which is one more than a
          * multiple of three, since we can avoid adding a "break" by just
-         * deleting two characters.
+         * deleting two characters.  This is the next-best use of our deletions.
          * 
-         * Finally, we check the last index of seq which is two more than a
+         * Finally, we start with the last index of seq which is two more than a
          * multiple of three, since we can avoid adding a "break" by just
          * deleting three characters.  This is the most costly way to spend
          * our deletions.
@@ -166,10 +170,17 @@ public class Solution {
             // Handle falling off the end of seq
             int j = (i >= seq.length) ? i - 3: i;
             
-            // Iterate downward by threes through seq
+            /** 
+             * Iterate backward by threes through seq, so long as we have
+             * deletions to spend.
+             * 
+             * Iterating backward allows us to spend all of our remaining
+             * deletions indiscriminately, in the case where all sequences
+             * cost 3 deletions to remove a single break.
+             */
             while (j > 2 && ndtemp > 0) {
                 
-                // If there is a sequence of length j
+                // If there exists a sequence of length j
                 if (seq[j] > 0) {
                     
                     // Decrement the number of sequences of length j by 1
@@ -194,6 +205,8 @@ public class Solution {
         
         // Calculate the number of breaks
         int numBreaks = 0;
+        
+        // We only need breaks for sequences of length 3 or more
         for (int i = 3; i < seq.length; i++) {
             /**
              * We need a single break for a sequence of three and for a 
