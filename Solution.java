@@ -21,6 +21,111 @@
  * @author Michael <GrubenM@GMail.com>
  */
 public class Solution {
+    // The given String
+    String s;
+    
+    // The "addition" variables
+    boolean needsNumber;
+    boolean needsUpper;
+    boolean needsLower;
+    
+    // The sequences we encounter
+    int[] seq;
+    
+    // The number of deletions which are required
+    int numDeletions;
+    
+    /**
+     * Processes the given string, storing whether the String meets the
+     * alphanumeric requirements, and storing the sequences of repeated
+     * characters, if 3 or longer.
+     */
+    private void readString() {
+        
+        // The current sequence length
+        int c = 1;
+        char tmp = s.charAt(0);
+        for (int i = 0; i < s.length(); i++) {
+            if (i > 0) {
+                // The sequence continues
+                if (s.charAt(i) == tmp) c++;
+                
+                // The sequence has ended
+                else {
+                    if (c > 2) seq[c]++;
+                    c = 1;
+                    tmp = s.charAt(i);
+                }
+            }
+            if (s.charAt(i) >= 'a' && s.charAt(i) <= 'z') needsLower = false;
+            else if (s.charAt(i) >= 'A' && s.charAt(i) <= 'Z') needsUpper = false;
+            else if (s.charAt(i) >= '0' && s.charAt(i) <= '9') needsNumber = false;
+        }
+        
+        // Handle long sequences which continue to the end the given String
+        if (c > 2) seq[c]++;
+    }
+    
+    /**
+     * Spends deletions to minimize the number of sequence breaks.
+     * 
+     * Beginning at the last index of seq which is a multiple of three,
+     * count backwards through seq by threes to spend all deletions.
+     * 
+     * We want to start with multiples of three since we can avoid adding
+     * a "break" by just deleting a single character at these indices.
+     * In other words, this is the best use of our deletions.
+     * 
+     * Then, we start with the last index of seq which is one more than a
+     * multiple of three, since we can avoid adding a "break" by just
+     * deleting two characters at these indices.
+     * This is the next-best use of our deletions.
+     * 
+     * Finally, we start with the last index of seq which is two more than a
+     * multiple of three, since we can avoid adding a "break" by just
+     * deleting three characters at these indices.
+     * This is the most costly way to spend our deletions.
+     * 
+     * If we ever can't afford the full deletion at a given index, we spend
+     * our remaining deletions at that index for a single sequence.
+     * 
+     * Counting backward allows us to spend all of our remaining deletions
+     * indiscriminately, like where all sequences cost 3 deletions to remove
+     * a single break.
+     */
+    private void spendDeletions() {
+        numDeletions = s.length() - 20;
+        int ndtemp = numDeletions;
+        int lastThreeMult = 3 * ((seq.length - 1) / 3);
+        for (int i = lastThreeMult; i < lastThreeMult + 3; i++) {
+            // Handle falling off the back of seq
+            int j = (i >= seq.length) ? i - 3: i;
+            while (j > 2 && ndtemp > 0) {
+                if (seq[j] > 0) {
+                    
+                    // We have one fewer sequence of length j
+                    seq[j]--;
+                    
+                    /**
+                     * Determine whether we have enough deletions remaining
+                     * in order to reduce the number of needed sequence breaks
+                     * by 1.
+                     * 
+                     * If we don't, just spend all remaining deletions.
+                     * It won't affect our final "changes" tally.
+                     */
+                    int d = Math.min((i % 3) + 1, ndtemp);
+                    
+                    // We have one more sequence of length (j-d)
+                    seq[j-d]++;
+                    
+                    // Update our spent deletions
+                    ndtemp -= d;
+                }
+                else j -= 3;
+            }
+        }
+    }
     
     /**
      * Given a String s, the candidate password, returns the minimum number
@@ -54,209 +159,48 @@ public class Solution {
      * @return the minimum number of changes to have a strong password
      */
     public int strongPasswordChecker(String s) {
-        
-        // Check for empty input
         if (s == null || s.equals("")) return 6;
+        this.s = s;
         
-        /**
-         * Our "additions" variables.
-         * 
-         * We will set these to "false" as we discover characters which are
-         * lowercase, uppercase, or numbers.
-         * 
-         * As used in this solution, "additions" refers to how many of the
-         * three alphanumeric requirements still need to be satisfied.
-         * 
-         * This is a separate concept from "insertions", which is how many
-         * characters need to be added to reach the minimum password length.
-         */
-        boolean needsNumber = true;
-        boolean needsUpper = true;
-        boolean needsLower = true;
+        // Initialize instance variables
+        needsNumber = true;
+        needsUpper = true;
+        needsLower = true;
         int numAdditions = 0;
+        numDeletions = 0;
+        seq = new int[s.length() + 1];
         
-        /**
-         * The number of deletions which are required.
-         * 
-         * A "deletion" is the removal of a character from the password.
-         */
-        int numDeletions = (s.length() > 20) ? s.length() - 20: 0;
-                
-        // Initialize the number of characters in sequence
-        int c = 1;
+        // Count "additions" needed and sequences
+        readString();
         
-        /**
-         * The sequences we encounter.
-         * 
-         * We will use this to spend our deletions (if any) in the most
-         * efficient way possible.
-         * 
-         * E.g. If you have three deletions and three sequences of length three,
-         * spend one deletion per sequence to avoid having to take another
-         * change-action to break the sequences.
-         * 
-         * The indices in this array refer to the length of the sequence.
-         */
-        int[] seq = new int[s.length() + 1];
-                
-        // Initialize our comparison character
-        char tmp = s.charAt(0);
-        
-        // Iterate over characters in the String
-        for (int i = 0; i < s.length(); i++) {
-            
-            // Determine sequence length by comparing to the previous character
-            if (i > 0) {
-                
-                // Increase the current sequence length
-                if (s.charAt(i) == tmp) c++;
-                
-                /**
-                 * The sequence has ended.
-                 * 
-                 * Store the current length in seq and reset the current length.
-                 */
-                else {
-                    if (c > 2) seq[c]++;
-                    c = 1;
-                }
-                
-                /**
-                 * Assign the current character to tmp for comparison in the
-                 * next iteration.
-                 */
-                tmp = s.charAt(i);
-            }
-            
-            // Determine whether "addition" conditions have been met
-            if (s.charAt(i) >= 'a' && s.charAt(i) <= 'z') needsLower = false;
-            else if (s.charAt(i) >= 'A' && s.charAt(i) <= 'Z') needsUpper = false;
-            else if (s.charAt(i) >= '0' && s.charAt(i) <= '9') needsNumber = false;
-        }
-        
-        /**
-         * For sequences that end the string, add the sequence to our array,
-         * if the sequence is long enough.
-         */
-        if (c > 2) seq[c]++;
-        
-        // Tally the number of additions (not necessarily insertions!) needed
         if (needsLower) numAdditions++;
         if (needsUpper) numAdditions++;
         if (needsNumber) numAdditions++;
         
-        // Initialize cost-tracker for clever deletion-spending
-        int ndtemp = numDeletions;
+        // Spend deletions to minimize sequence breaks needed, if possible
+        if (s.length() > 20) spendDeletions();
         
-        /**
-         * Beginning at the last index of seq which is a multiple of three,
-         * count backwards through seq by threes to decrement sequences.
-         * 
-         * We want to start with multiples of three since we can avoid adding
-         * a "break" by just deleting a single character.  In other words,
-         * this is the best use of our deletions.
-         * 
-         * Then, we start with the last index of seq which is one more than a
-         * multiple of three, since we can avoid adding a "break" by just
-         * deleting two characters.  This is the next-best use of our deletions.
-         * 
-         * Finally, we start with the last index of seq which is two more than a
-         * multiple of three, since we can avoid adding a "break" by just
-         * deleting three characters.  This is the most costly way to spend
-         * our deletions.
-         */
-        int lastThreeMult = 3 * ((seq.length - 1) / 3);
-        for (int i = lastThreeMult; i < lastThreeMult + 3; i++) {
-            // Handle falling off the end of seq
-            int j = (i >= seq.length) ? i - 3: i;
-            
-            /** 
-             * Iterate backward by threes through seq, so long as we have
-             * deletions to spend.
-             * 
-             * Iterating backward allows us to spend all of our remaining
-             * deletions indiscriminately, in the case where all sequences
-             * cost 3 deletions to remove a single break.
-             */
-            while (j > 2 && ndtemp > 0) {
-                
-                // If there exists a sequence of length j
-                if (seq[j] > 0) {
-                    
-                    // Decrement the number of sequences of length j by 1
-                    seq[j]--;
-                    
-                    /**
-                     * Determine whether we have enough deletions to spend
-                     * to reduce the number of needed breaks by 1, otherwise
-                     * just spend all of our remaining deletions.
-                     */
-                    int d = Math.min((i % 3) + 1, ndtemp);
-                    
-                    // Increment the number of sequences of length j-d by 1
-                    seq[j-d]++;
-                    
-                    // Update our spent deletions
-                    ndtemp -= d;
-                }
-                else j -= 3;
-            }
-        }
-        
-        // Calculate the number of breaks
+        // Tally number of sequence breaks needed
         int numBreaks = 0;
-        
-        // We only need breaks for sequences of length 3 or more
         for (int i = 3; i < seq.length; i++) {
-            /**
-             * We need a single break for a sequence of three and for a 
-             * sequence of five, but two breaks for a sequence of six.
-             * 
-             * Accordingly, we need 1 break for every (sequenceLength) / 3.
-             * 
-             * Handle multiple sequences of the same length by multiplying by
-             * the number of sequences of that length
-             */
             numBreaks += seq[i] * (i / 3);
         }
         
-        /**
-         * Consolidate breaks and additions, if possible.
-         * 
-         * Note that we can't have fewer breaks than are required, or fewer
-         * additions than are required, but that every break can serve as an
-         * addition, and vice versa.
-         * 
-         * Accordingly, the number of changes we need is the max of the two.
-         */
+        // Consolidate breaks and additions into changes
         int numChanges = Math.max(numBreaks, numAdditions);
         
-        /**
-         * Calculate number of changes for short input.
-         * 
-         * Note that we can't have fewer insertions than are required, or fewer
-         * changes (see above) than are required, but that every insertion can
-         * serve as a change, and vice versa.
-         * 
-         * Accordingly, the number of changes we need is the max of the two.
-         */
+        // For too-short input, consolidate insertions and changes.
         if (s.length() < 6) {
             int numInsertions = 6 - s.length();
             numChanges = Math.max(numInsertions, numChanges);
         }
         
-        /**
-         * Calculate number of changes for long input.
-         * 
-         * Note that we already reduced numChanges above by the amount of
-         * deletions we could cleverly spend.
-         * 
-         * Accordingly, we need to now add those deletions back in, since they
-         * are required for length.
-         */
+        // For too-long input, add the number of breaks and additions needed
+        // to the number of deletions required.
         else if (s.length() > 20) {
             numChanges = numDeletions + numChanges;
         }
+        
         return numChanges;
     }
     
@@ -312,7 +256,7 @@ public class Solution {
         // 4
         
         System.out.println(sol.strongPasswordChecker("aaaaabbbbbccccccddddddA1"));
-        // 6
+        // 8
         
         System.out.println(sol.strongPasswordChecker("aaaaaa1234567890123Ubefg"));
         // 4
