@@ -113,8 +113,8 @@ public class Solution {
                 
                 /**
                  * The sequence has ended.
-                 * Count the number of breaks needed and
-                 * reset the sequence count.
+                 * 
+                 * Store the current length in seq and reset the current length.
                  */
                 else {
                     if (c > 2) seq[c]++;
